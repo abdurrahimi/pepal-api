@@ -23,7 +23,6 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        //return response()->json(['email' => $request->email]);
         $this->validate($request, [
             'email' => 'required|email',
             'password' => 'required|string',
@@ -34,9 +33,7 @@ class AuthController extends Controller
         if (! $token = Auth::attempt($credentials)) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
-        if(! Auth::user()->roles == "admin"){
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
+
         return $this->respondWithToken($token);
     }
 
