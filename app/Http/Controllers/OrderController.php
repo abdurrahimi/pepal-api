@@ -121,6 +121,11 @@ class OrderController extends Controller
             $history->pesan = $request->pesan;
             $history->status = $request->status;
             $history->save();
+            
+            $order = Order::find($id);
+            $order->status = $request->status;
+            $order->save();
+
             DB::commit();
             return response()->json([
                 "message" => "History berhasil disimpan"
