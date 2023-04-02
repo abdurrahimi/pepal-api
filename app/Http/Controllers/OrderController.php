@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Order;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Order;
+use App\Models\Rate;
+use App\Models\OrderHistory;
 use DB;
 
 class OrderController extends Controller
@@ -29,13 +31,43 @@ class OrderController extends Controller
         return response()->json($data);
     }
 
+    public function show(Request $request, $id)
+    {
+        $data = Order::with([
+            'user' => function($q){
+                return $q->select('id','name','email','phone');
+            },
+            'rate' => function($q){
+                return $q->select('id','rate');
+            },
+            'history'
+        ])->where('id',$id)->first();
+        return response()->json($data);
+    }
+
     public function create(Request $request)
     {
-        if(!$request->setuju){
-            return response()->json(['message'=>'anda harus menyetujui syarat dan ketentuan'],400);
+        if(!isset($request->rate) || $request->rate == ""){
+            return response()->json(['message'=>'pesanan tidak valid'],400);
         }
+
+        $rate = Rate::where("id",$request->rate)->first();
+        if(empty($rate) || $rate->is_active !== 1){
+            return response()->json(['message'=>'rate telah berubah, harap periksa kembali pesanan anda'],400);
+        }
+
+        if($request->nominal < 30){
+            return response()->json(['message'=>'minimal pemesanan adalah $30'],400);
+        }
+
+        if($request->nominal > 2000){
+            return response()->json(['message'=>'maksimal pemesanan adalah $2000'],400);
+        }
+        
+
         DB::beginTransaction();
         try{
+
             $order = new Order;
             $order->member_id = Auth::user()->id;
             $order->nominal = $request->nominal;
@@ -44,10 +76,54 @@ class OrderController extends Controller
             $order->total = $request->nominal * 16000; // get data dari kurs di db. ambil berdasarkan id yang dikirim
             $order->pembayaran = strtoupper($request->metode);
             $order->status = 'Waiting';
+            $order->pesan = $request->pesan;
             $order->save();
+
             DB::commit();
             return response()->json([
                 "message" => "pesanan anda akan segera di proses"
+            ]);
+        }catch(Exception $ex){
+            DB::rollBack();
+            return response()->json([
+                "message" => "terjadi error",
+                "error" => $ex->getMessage(),
+            ],500);
+        }
+    }
+
+    public function storeCatatan(Request $request,$id)
+    {
+        DB::beginTransaction();
+        try{
+            $order = Order::find($id);
+            $order->pesan = $request->pesan;
+            $order->save();
+            DB::commit();
+            return response()->json([
+                "message" => "catatan berhasil disimpan"
+            ]);
+        }catch(Exception $ex){
+            DB::rollBack();
+            return response()->json([
+                "message" => "terjadi error",
+                "error" => $ex->getMessage(),
+            ],500);
+        }
+    }
+
+    public function storeHistory(Request $request,$id)
+    {
+        DB::beginTransaction();
+        try{
+            $history = new OrderHistory;
+            $history->order_id = $id;
+            $history->pesan = $request->pesan;
+            $history->status = $request->status;
+            $history->save();
+            DB::commit();
+            return response()->json([
+                "message" => "History berhasil disimpan"
             ]);
         }catch(Exception $ex){
             DB::rollBack();

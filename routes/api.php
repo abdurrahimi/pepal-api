@@ -27,12 +27,16 @@ Route::group([
     //CMS Route
     Route::post('login', 'AuthController@login')->name('login');
     Route::post('refresh', 'AuthController@refresh');
+    Route::get('/get-rate', 'RateController@index');
     
     Route::group(['middleware'=>'auth:api'],function($router){
         Route::get('user', 'AuthController@me');
         Route::post('logout', 'AuthController@logout');
         Route::get('/order', 'OrderController@index');
+        Route::get('/order/{id}', 'OrderController@show');
         Route::post('/order', 'OrderController@create');
+        Route::post('/catatan-order/{id}', 'OrderController@storeCatatan');
+        Route::post('/history-order/{id}', 'OrderController@storeHistory');
     });
 
 });
