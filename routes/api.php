@@ -26,6 +26,7 @@ Route::group([
 ], function ($router) {
     //CMS Route
     Route::post('login', 'AuthController@login')->name('login');
+    Route::post('register', 'AuthController@register')->name('register');
     Route::post('refresh', 'AuthController@refresh');
     Route::get('/get-rate', 'RateController@index');
     

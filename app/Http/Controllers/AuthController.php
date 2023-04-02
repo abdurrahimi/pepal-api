@@ -67,9 +67,9 @@ class AuthController extends Controller
         User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone' => $request->phone,
             'password' => Hash::make($request->password),
             'role'  => 'member',
-            'profile_pict' => 'https://img.mreadercdn.com/_r/100x100/100/avatar/dragon_ball/av-db-01.jpeg'
         ]);
         
         return response()->json(['message' => 'success']);
