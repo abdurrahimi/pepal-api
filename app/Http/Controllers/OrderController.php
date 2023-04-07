@@ -13,7 +13,8 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $data = Order::where(DB::Raw(1),'=',1);
+        $data = Order::select('order.*','bank.bank as pembayaran')
+                ->leftJoin('bank','bank.id','pembayaran_id');
         if(auth()->user()->roles !== 'admin'){
             $data = $data->where('member_id','=',auth()->user()->id);
         }
@@ -33,15 +34,20 @@ class OrderController extends Controller
 
     public function show(Request $request, $id)
     {
-        $data = Order::with([
-            'user' => function($q){
-                return $q->select('id','name','email','phone');
-            },
-            'rate' => function($q){
-                return $q->select('id','rate');
-            },
-            'history'
-        ])->where('id',$id)->first();
+        $data = Order::select('order.*','bank.bank as pembayaran')
+                ->leftJoin('bank','bank.id','pembayaran_id')
+                ->with([
+                    'user' => function($q){
+                        return $q->select('id','name','email','phone');
+                    },
+                    'rate' => function($q){
+                        return $q->select('id','rate');
+                    },
+                    'history'
+                ])->where('order.id',$id)->first();
+        if(Auth::user()->roles != 'admin' && $data->user->id != Auth::user()->id){
+            return response()->json(['message'=>'unauthorized'],401);
+        }
         return response()->json($data);
     }
 
@@ -56,7 +62,7 @@ class OrderController extends Controller
             return response()->json(['message'=>'rate telah berubah, harap periksa kembali pesanan anda'],400);
         }
 
-        if($request->nominal < 30){
+        if($request->tipe == 'paypal' && $request->nominal < 30){
             return response()->json(['message'=>'minimal pemesanan adalah $30'],400);
         }
 
@@ -72,16 +78,21 @@ class OrderController extends Controller
             $order->member_id = Auth::user()->id;
             $order->nominal = $request->nominal;
             $order->tipe = $request->order;
+            if($request->tipe == 'bayar'){
+                $order->jenis = $request->jenis ?? "";
+            }
+            $order->rate = $request->rate;
             $order->target = $request->akun;
             $order->total = $request->nominal * 16000; // get data dari kurs di db. ambil berdasarkan id yang dikirim
-            $order->pembayaran = strtoupper($request->metode);
+            $order->pembayaran_id = strtoupper($request->metode);
             $order->status = 'Waiting';
             $order->pesan = $request->pesan;
             $order->save();
 
             DB::commit();
             return response()->json([
-                "message" => "pesanan anda akan segera di proses"
+                "message" => "pesanan anda akan segera di proses",
+                "id" => $order->id
             ]);
         }catch(Exception $ex){
             DB::rollBack();

@@ -47,7 +47,10 @@ Route::group([
 
         Route::resource('category', 'CategoryController')->except(['show','create','edit']);
         Route::get('/category/all','CategoryController@all');
-        Route::resource('post', 'PostController')->except(['create']);
+
+        Route::resource('post', 'PostController')->except(['create','edit']);
+        Route::resource('bank', 'BankController')->except(['create','edit']);
+        Route::resource('voucher', 'VoucherController')->except(['create','edit']);
     });
 
 });

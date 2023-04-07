@@ -21,7 +21,7 @@ class BlogController extends Controller
     {
         $data = Post::with(['category' => function($q){
             return $q->leftJoin('category','post_category.category_id','category.id')->select('post_category.id','category_id','post_id','category');
-        }])->where('slug','=',$request->slug);
+        }])->where('slug','=',$request->slug)->first();
         return response()->json($data);
     }
 }
