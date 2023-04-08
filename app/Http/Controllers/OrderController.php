@@ -7,10 +7,14 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
 use App\Models\Rate;
 use App\Models\OrderHistory;
+use App\Models\Voucher;
+use App\Traits\Helper;
 use DB;
 
 class OrderController extends Controller
 {
+    use Helper;
+
     public function index(Request $request)
     {
         $data = Order::select('order.*','bank.bank as pembayaran')
@@ -34,7 +38,7 @@ class OrderController extends Controller
 
     public function show(Request $request, $id)
     {
-        $data = Order::select('order.*','bank.bank as pembayaran')
+        $data = Order::select('order.*','bank.bank as pembayaran','bank.norek','bank.nama')
                 ->leftJoin('bank','bank.id','pembayaran_id')
                 ->with([
                     'user' => function($q){
@@ -69,6 +73,38 @@ class OrderController extends Controller
         if($request->nominal > 2000){
             return response()->json(['message'=>'maksimal pemesanan adalah $2000'],400);
         }
+
+        if($request->applied){
+            $voucher = Voucher::where('kode',$request->kupon)->where('active_start','<=',DB::Raw('now()'))->where('active_end','>=',DB::raw('now()'))->first();
+            if(empty($voucher)){
+                return response()->json([
+                    'valid' => false,
+                    'message' => 'voucher tidak valid'
+                ],422);
+            }
+
+            $check = Order::where('member_id', Auth::user()->id)->where('voucher_id', $voucher->id)->count();
+            if($check > $voucher->max_penggunaan){
+                return response()->json([
+                    'valid' => false,
+                    'message' => 'voucher hanya dapat digunakan sebanyak '.$voucher->max_penggunaan.' kali'
+                ],422);
+            }
+
+            if($voucher->tipe_order != 'all' && $voucher->tipe_order != $request->order){
+                return response()->json([
+                    'valid' => false,
+                    'message' => 'Voucher tidak dapat digunakan untuk order tipe ini'
+                ],422);
+            }
+
+            if($voucher->min_harga > ($request->nominal * $rate->rate)){
+                return response()->json([
+                    'valid' => false,
+                    'message' => 'Minimal order untuk voucher ini adalah '.$voucher->min_harga
+                ],422);
+            }
+        }
         
 
         DB::beginTransaction();
@@ -83,9 +119,31 @@ class OrderController extends Controller
             }
             $order->rate = $request->rate;
             $order->target = $request->akun;
-            $order->total = $request->nominal * 16000; // get data dari kurs di db. ambil berdasarkan id yang dikirim
+
+            $discount = 0;
+            if($request->applied){
+                $discount = $voucher->jumlah;
+            }
+
+            $fee = 0;
+            if($request->order == 'bayar'){
+                //((data.rate.rate * data.nominal) - data.discount) * (4 / 100) > 30000
+                $fee = 30000; 
+                $countFee = ($rate->rate * $request->nominal) - (4 / 100);
+                if($countFee > $fee){
+                    $fee = $countFee;
+                }
+            }
+
+            $order->total = ($request->nominal * $rate->rate) - $discount; // get data dari kurs di db. ambil berdasarkan id yang dikirim
+
+
             $order->pembayaran_id = strtoupper($request->metode);
             $order->status = 'Waiting';
+            if($request->applied){
+                $order->diskon = $voucher->jumlah;
+                $order->voucher_id = $voucher->id;
+            }
             $order->pesan = $request->pesan;
             $order->save();
 
@@ -148,5 +206,68 @@ class OrderController extends Controller
                 "error" => $ex->getMessage(),
             ],500);
         }
+    }
+
+    public function uploadBukti(Request $request,$id)
+    {
+        try{
+            $image = $this->storeImageLocal($request->bukti);
+
+            $order = Order::find($id);
+            $order->bukti = $image;
+            $order->save();
+            DB::commit();
+
+            return response()->json([
+                "message" => "bukti berhasil disimpan"
+            ]);
+        }catch(Exception $ex){
+            DB::rollBack();
+            return response()->json([
+                "message" => "terjadi error",
+                "error" => $ex->getMessage(),
+            ],500);
+        }
+    }
+
+    public function applyVoucher(Request $request)
+    {
+        $voucher = Voucher::where('kode',$request->kupon)->where('active_start','<=',DB::Raw('now()'))->where('active_end','>=',DB::raw('now()'))->first();
+        if(empty($voucher)){
+            return response()->json([
+                'valid' => false,
+                'message' => 'voucher tidak valid'
+            ],422);
+        }
+
+        $check = Order::where('member_id', Auth::user()->id)->where('voucher_id', $voucher->id)->count();
+        if($check > $voucher->max_penggunaan){
+            return response()->json([
+                'valid' => false,
+                'message' => 'voucher hanya dapat digunakan sebanyak '.$voucher->max_penggunaan.' kali'
+            ],422);
+        }
+
+        if($voucher->tipe_order != 'all' && $voucher->tipe_order != $request->order){
+            return response()->json([
+                'valid' => false,
+                'message' => 'Voucher tidak dapat digunakan untuk order tipe ini'
+            ],422);
+        }
+
+        $rate = Rate::where('is_active',1)->first();
+        if($voucher->min_harga > ($request->nominal * $rate->rate)){
+            return response()->json([
+                'valid' => false,
+                'message' => 'Minimal order untuk voucher ini adalah '.$voucher->min_harga
+            ],422);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'message' => 'Voucher berhasil digunakan',
+            'voucher' => $voucher
+        ]);
+        
     }
 }

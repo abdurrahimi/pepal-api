@@ -34,6 +34,8 @@ Route::group([
     Route::post('register', 'AuthController@register')->name('register');
     Route::post('refresh', 'AuthController@refresh');
     Route::get('/get-rate', 'RateController@index');
+
+    Route::get('/test-rate', 'RateController@getRate');
     
     
     Route::group(['middleware'=>'auth:api'],function($router){
@@ -47,10 +49,15 @@ Route::group([
 
         Route::resource('category', 'CategoryController')->except(['show','create','edit']);
         Route::get('/category/all','CategoryController@all');
+        Route::post('/upload-bukti/{id}', 'OrderController@uploadBukti');
 
         Route::resource('post', 'PostController')->except(['create','edit']);
         Route::resource('bank', 'BankController')->except(['create','edit']);
         Route::resource('voucher', 'VoucherController')->except(['create','edit']);
+
+        Route::post('/voucher/apply', 'OrderController@applyVoucher');
+
+        Route::get('/dashboard','DashboardController@index');
     });
 
 });

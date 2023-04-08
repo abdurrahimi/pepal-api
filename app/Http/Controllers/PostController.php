@@ -131,7 +131,6 @@ class PostController extends Controller
             }else{
                 $model->image = $request->image;
             }
-            $model->views = 0;
             $model->image_alt = $request->image_alt;
             $model->meta_desc = $request->meta_desc;
             $model->meta_title = $request->meta_title;
