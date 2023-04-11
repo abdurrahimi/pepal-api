@@ -21,7 +21,7 @@ class DashboardController extends Controller
         $transaksiMonth = Order::select(DB::Raw('tipe, COALESCE(sum(nominal),0) as total'))->whereRaw('MONTH(created_at) = MONTH(now()) and YEAR(created_at) = YEAR(now())');
         $transaksiWeek = Order::select(DB::Raw('tipe, COALESCE(sum(nominal),0) as total'))->whereRaw('YEARWEEK(`created_at`, 1) = YEARWEEK(CURDATE(), 1)');
 
-        $latestOrder = Order::select('order.*','bank.bank as pembayaran')
+        $latestOrder = Order::with('user')->select('order.*','bank.bank as pembayaran')
         ->leftJoin('bank','bank.id','pembayaran_id');
 
         if(Auth::user()->roles != 'admin'){
