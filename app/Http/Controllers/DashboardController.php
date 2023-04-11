@@ -17,9 +17,9 @@ class DashboardController extends Controller
 /*         $totalOrderMonth = Order::select(DB::Raw('tipe,status, COALESCE(count(*),0) as total'))->whereRaw('MONTH(created_at) = MONTH(now())');
         $totalOrderWeek = Order::select(DB::Raw('tipe,status, COALESCE(count(*),0) as total'))->whereRaw('YEARWEEK(`created_at`, 1) = YEARWEEK(CURDATE(), 1)'); */
 
-        $transaksi = Order::select(DB::Raw('status,tipe, COALESCE(sum(total),0) as total'));
-        $transaksiMonth = Order::select(DB::Raw('tipe, COALESCE(sum(total),0) as total'))->whereRaw('MONTH(created_at) = MONTH(now())');
-        $transaksiWeek = Order::select(DB::Raw('tipe, COALESCE(sum(total),0) as total'))->whereRaw('YEARWEEK(`created_at`, 1) = YEARWEEK(CURDATE(), 1)');
+        $transaksi = Order::select(DB::Raw('status,tipe, COALESCE(sum(nominal),0) as total'));
+        $transaksiMonth = Order::select(DB::Raw('tipe, COALESCE(sum(nominal),0) as total'))->whereRaw('MONTH(created_at) = MONTH(now())');
+        $transaksiWeek = Order::select(DB::Raw('tipe, COALESCE(sum(nominal),0) as total'))->whereRaw('YEARWEEK(`created_at`, 1) = YEARWEEK(CURDATE(), 1)');
 
         if(Auth::user()->roles != 'admin'){
             $totalOrder = $totalOrder->where('member_id','=',Auth::user()->id);
@@ -30,7 +30,7 @@ class DashboardController extends Controller
             $transaksiMonth = $transaksiMonth->where('member_id','=',Auth::user()->id);
             $transaksiWeek = $transaksiWeek->where('member_id','=',Auth::user()->id);
         }
-        
+
         $totalOrder = $totalOrder->groupBy(DB::Raw('status,tipe'))->get();
 /*         $totalOrderMonth = $totalOrderMonth->groupBy(DB::Raw('status,tipe'))->get();
         $totalOrderWeek = $totalOrderWeek->groupBy(DB::Raw('status,tipe'))->get(); */
