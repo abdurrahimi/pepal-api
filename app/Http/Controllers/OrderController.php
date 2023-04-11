@@ -28,7 +28,7 @@ class OrderController extends Controller
                 return $q->where(DB::Raw('lower(target)'),'=',$request->input('search')['value'])
                             ->orWhere('tipe','=',$request->input('search')['value'])
                             ->orWhere(DB::Raw('lower(status)'),'=',$request->input('search')['value'])
-                            ->orWhere('id','=', $request->input('search')['value'])
+                            ->orWhere('order.id','=', $request->input('search')['value'])
                             ->orWhere('pembayaran','=',strtolower($request->input('search')['value']));
             });
         }
