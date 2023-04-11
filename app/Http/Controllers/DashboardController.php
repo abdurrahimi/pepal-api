@@ -23,8 +23,6 @@ class DashboardController extends Controller
 
         if(Auth::user()->roles != 'admin'){
             $totalOrder = $totalOrder->where('member_id','=',Auth::user()->id);
-/*             $totalOrderMonth = $totalOrderMonth->where('member_id','=',Auth::user()->id);
-            $totalOrderWeek = $totalOrderWeek->where('member_id','=',Auth::user()->id); */
 
             $transaksi = $transaksi->where('member_id','=',Auth::user()->id);
             $transaksiMonth = $transaksiMonth->where('member_id','=',Auth::user()->id);
@@ -32,8 +30,6 @@ class DashboardController extends Controller
         }
 
         $totalOrder = $totalOrder->groupBy(DB::Raw('status,tipe'))->get();
-/*         $totalOrderMonth = $totalOrderMonth->groupBy(DB::Raw('status,tipe'))->get();
-        $totalOrderWeek = $totalOrderWeek->groupBy(DB::Raw('status,tipe'))->get(); */
 
         $transaksi = $transaksi->groupBy(DB::Raw('status,tipe'))->get();
         $transaksiMonth = $transaksiMonth->groupBy(DB::Raw('tipe'))->get();
@@ -43,8 +39,8 @@ class DashboardController extends Controller
             "total" => $totalOrder,
             "transaksi" =>   [
                 "all" => $transaksi,
-                "week" => $transaksiMonth,
-                "month" => $transaksiWeek,
+                "week" => $transaksiWeek,
+                "month" => $transaksiMonth,
             ]
         ];
 
