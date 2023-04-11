@@ -38,11 +38,12 @@ class PostController extends Controller
         //
         DB::beginTransaction();
         try{
-            
+
             $model = new Post;
             $model->title = $request->title;
             $model->slug = $request->slug;
             $model->content = $request->content;
+            $model->is_featured = $request->is_featured;
             $model->date_published = $request->date_published;
             if (preg_match('/^data:image\/(\w+);base64,/', $request->image)) {
                 $image = $this->storeImageLocal($request->image);
@@ -54,7 +55,7 @@ class PostController extends Controller
             $model->image_alt = $request->image_alt;
             $model->meta_desc = $request->meta_desc;
             $model->meta_title = $request->meta_title;
-            $model->status = $request->status; 
+            $model->status = $request->status;
             $model->save();
             //return response()->json(["xxx" => $request->category],500);
             foreach($request->category as $value){
@@ -76,7 +77,7 @@ class PostController extends Controller
             ],500);
         }
 
-        
+
     }
 
     /**
@@ -119,7 +120,7 @@ class PostController extends Controller
     {
         DB::beginTransaction();
         try{
-            
+
             $model = Post::find($id);
             $model->title = $request->title;
             $model->slug = $request->slug;
@@ -132,9 +133,10 @@ class PostController extends Controller
                 $model->image = $request->image;
             }
             $model->image_alt = $request->image_alt;
+            $model->is_featured = $request->is_featured;
             $model->meta_desc = $request->meta_desc;
             $model->meta_title = $request->meta_title;
-            $model->status = $request->status; 
+            $model->status = $request->status;
             $model->save();
             //return response()->json(["xxx" => $request->category],500);
             PostCategory::where('post_id',$id)->delete();
