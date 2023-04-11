@@ -40,7 +40,7 @@ class DashboardController extends Controller
         $transaksiMonth = $transaksiMonth->groupBy(DB::Raw('tipe'))->get();
         $transaksiWeek = $transaksiWeek->groupBy(DB::Raw('tipe'))->get();
 
-        $latestOrder = $latestOrder->orderBy('created_at','desc')->limit(10)->get();
+        $latestOrder = $latestOrder->orderBy('created_at','desc')->limit(5)->get();
 
         $data = [
             "total" => $totalOrder,
