@@ -22,11 +22,12 @@ class OrderController extends Controller
         if(auth()->user()->roles !== 'admin'){
             $data = $data->where('member_id','=',auth()->user()->id);
         }
-        
+
         if($request->input('search')['value'] != ""){
             $data = $data->where(function($q) use ($request){
                 return $q->where('target','=',$request->input('search')['value'])
                             ->orWhere('tipe',$request->input('search')['value'])
+                            ->orWhere('id', $request->input('search')['value'])
                             ->orWhere('pembayaran','=',strtolower($request->input('search')['value']));
             });
         }
@@ -105,7 +106,7 @@ class OrderController extends Controller
                 ],422);
             }
         }
-        
+
 
         DB::beginTransaction();
         try{
@@ -128,7 +129,7 @@ class OrderController extends Controller
             $fee = 0;
             if($request->order == 'bayar'){
                 //((data.rate.rate * data.nominal) - data.discount) * (4 / 100) > 30000
-                $fee = 30000; 
+                $fee = 30000;
                 $countFee = ($rate->rate * $request->nominal) - (4 / 100);
                 if($countFee > $fee){
                     $fee = $countFee;
@@ -190,7 +191,7 @@ class OrderController extends Controller
             $history->pesan = $request->pesan;
             $history->status = $request->status;
             $history->save();
-            
+
             $order = Order::find($id);
             $order->status = $request->status;
             $order->save();
@@ -268,6 +269,6 @@ class OrderController extends Controller
             'message' => 'Voucher berhasil digunakan',
             'voucher' => $voucher
         ]);
-        
+
     }
 }
