@@ -29,7 +29,7 @@ class OrderController extends Controller
                             ->orWhere('tipe','=',$request->input('search')['value'])
                             ->orWhere(DB::Raw('lower(status)'),'=',$request->input('search')['value'])
                             ->orWhere('order.id','=', $request->input('search')['value'])
-                            ->orWhere('pembayaran','=',strtolower($request->input('search')['value']));
+                            ->orWhere(DB::Raw('lower(bank.bank)'),'=',strtolower($request->input('search')['value']));
             });
         }
         $data = $data->paginate($request->input('length'));
