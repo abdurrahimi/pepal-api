@@ -18,7 +18,7 @@ class DashboardController extends Controller
         $totalOrderWeek = Order::select(DB::Raw('tipe,status, COALESCE(count(*),0) as total'))->whereRaw('YEARWEEK(`created_at`, 1) = YEARWEEK(CURDATE(), 1)'); */
 
         $transaksi = Order::select(DB::Raw('status,tipe, COALESCE(sum(nominal),0) as total'));
-        $transaksiMonth = Order::select(DB::Raw('tipe, COALESCE(sum(nominal),0) as total'))->whereRaw('MONTH(created_at) = MONTH(now()) && YEAR(created_at) = YEAR(now())');
+        $transaksiMonth = Order::select(DB::Raw('tipe, COALESCE(sum(nominal),0) as total'))->whereRaw('MONTH(created_at) = MONTH(now()) and YEAR(created_at) = YEAR(now())');
         $transaksiWeek = Order::select(DB::Raw('tipe, COALESCE(sum(nominal),0) as total'))->whereRaw('YEARWEEK(`created_at`, 1) = YEARWEEK(CURDATE(), 1)');
 
         if(Auth::user()->roles != 'admin'){
