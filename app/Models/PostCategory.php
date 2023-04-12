@@ -13,4 +13,8 @@ class PostCategory extends Model
     public function category(){
         return $this->hasOne('App\Models\Category','id','category_id');
     }
+
+    public function post(){
+        return $this->belongsTo('App\Models\Post','post_id','id');
+    }
 }
