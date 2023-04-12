@@ -137,7 +137,17 @@ class OrderController extends Controller
                 }
             }
 
-            $order->total = ($request->nominal * $rate->rate) - $discount; // get data dari kurs di db. ambil berdasarkan id yang dikirim
+            if($request->order == 'paypal'){
+                $order->total = ($request->nominal * $rate->rate) - $discount; // get data dari kurs di db. ambil berdasarkan id yang dikirim
+            }
+
+            if($request->order == 'bayar'){
+                if($request->nominal <50){
+                    $order->total = ($request->nominal * ($rate->rate + 500)) - $discount; // get data dari kurs di db. ambil berdasarkan id yang dikirim
+                }else{
+                    $order->total = ($request->nominal * ($rate->rate)) - $discount;
+                }
+            }
 
 
             $order->pembayaran_id = strtoupper($request->metode);
