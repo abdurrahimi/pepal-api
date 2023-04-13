@@ -17,6 +17,16 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
+        $column = [
+            'id',
+            'tipe',
+            'nominal',
+            'total',
+            'created_at',
+            'pembayaran_id',
+            'status'
+        ];
+
         $data = Order::select('order.*','bank.bank as pembayaran')
                 ->leftJoin('bank','bank.id','pembayaran_id');
         if(auth()->user()->roles !== 'admin'){
@@ -32,6 +42,11 @@ class OrderController extends Controller
                             ->orWhere(DB::Raw('lower(bank.bank)'),'=',strtolower($request->input('search')['value']));
             });
         }
+
+        if($request->input('order')[0]['column'] !== ""){
+            $data = $data->orderBy($column[$request->input('order')[0]['column']] , $request->input('order')[0]['dir']);
+        }
+
         $data = $data->paginate($request->input('length'));
         //return $data;
 

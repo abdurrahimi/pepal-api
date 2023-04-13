@@ -37,6 +37,52 @@ class AuthController extends Controller
         return $this->respondWithToken($token);
     }
 
+    public function profile()
+    {
+        return response()->json(['user' => auth()->user()]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = User::find(auth()->user()->id);
+        $user->name = $request->name;
+        $user->profesi = $request->profesi;
+        $user->alamat = $request->alamat;
+        $user->phone = $request->phone;
+        $user->email = $request->email;
+        $user->save();
+        return response()->json(['user' => $user]);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $user = User::find(auth()->user()->id);
+        if(!Hash::check($request->old_pass, $user->password)){
+            return response()->json(['message' => 'password lama tidak sesuai'],400);
+        }
+        
+        if($request->password != $request->password_confirm){
+            return response()->json(['message' => 'password tidak sama'],400);
+        }
+
+        if(strlen($request->password) < 6){
+            return response()->json(['message' => 'password setidaknya harus 6 character'],400);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+        
+        return response()->json(['message' => 'success']);
+    }
+
+    public function setting(Request $request)
+    {
+        $user = User::find(auth()->user()->id);
+        $user->is_login_otp = $request->otp;
+        $user->is_verif_sandi_order = $request->verif;
+        $user->save();
+    }
+
     public function loginMember(Request $request)
     {
         //return response()->json(['email' => $request->all()]);

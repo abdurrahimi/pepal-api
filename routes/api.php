@@ -40,6 +40,12 @@ Route::group([
     
     Route::group(['middleware'=>'auth:api'],function($router){
         Route::get('user', 'AuthController@me');
+        Route::get('/profile', 'AuthController@profile');
+        Route::post('/profile', 'AuthController@updateProfile');
+
+        Route::post('/password', 'AuthController@changePassword');
+        Route::post('/setting', 'AuthController@setting');
+
         Route::post('logout', 'AuthController@logout');
         Route::get('/order', 'OrderController@index');
         Route::get('/order/{id}', 'OrderController@show');
@@ -50,6 +56,9 @@ Route::group([
         Route::resource('category', 'CategoryController')->except(['show','create','edit']);
         Route::get('/category/all','CategoryController@all');
         Route::post('/upload-bukti/{id}', 'OrderController@uploadBukti');
+
+        Route::get('/rate/list','RateController@list');
+        Route::put('/rate/update/{id}','RateController@update');
 
         Route::resource('post', 'PostController')->except(['create','edit']);
         Route::resource('bank', 'BankController')->except(['create','edit']);
