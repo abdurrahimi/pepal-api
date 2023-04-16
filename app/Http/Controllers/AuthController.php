@@ -168,7 +168,7 @@ class AuthController extends Controller
             'email_verified_token' => bin2hex($bytes),
             'roles'  => 'member',
         ]);
-        Email::dispatch('ACTIVATE',$request->email)->onQueue('email');
+        Email::dispatch('AKTIVASI',$request->email)->onQueue('email');
         return response()->json(['message' => 'success']);
     }
 
