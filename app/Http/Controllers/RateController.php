@@ -21,7 +21,7 @@ class RateController extends Controller
 
     public function getRate()
     {
-        Email::dispatchSync('AKTIVASI','x@x.x');
+        Email::dispatchSync('AKTIVASI','a@a.a');
     }
 
     public function list(Request $request)
