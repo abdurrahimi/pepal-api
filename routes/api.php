@@ -30,6 +30,8 @@ Route::group([
     Route::post('/blog/detail', 'Front\BlogController@detail');
 
     //CMS Route
+    Route::post('/verify', 'AuthController@step1');
+    Route::get('/activate', 'AuthController@activate');
     Route::post('login', 'AuthController@login')->name('login');
     Route::post('register', 'AuthController@register')->name('register');
     Route::post('refresh', 'AuthController@refresh');
@@ -63,6 +65,8 @@ Route::group([
         Route::resource('post', 'PostController')->except(['create','edit']);
         Route::resource('bank', 'BankController')->except(['create','edit']);
         Route::resource('voucher', 'VoucherController')->except(['create','edit']);
+        Route::resource('email', 'EmailController')->except(['create','edit','delete','store']);
+        Route::resource('template', 'TemplateController')->except(['create','edit','delete','store']);
 
         Route::post('/voucher/apply', 'OrderController@applyVoucher');
 

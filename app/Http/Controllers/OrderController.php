@@ -8,7 +8,9 @@ use App\Models\Order;
 use App\Models\Rate;
 use App\Models\OrderHistory;
 use App\Models\Voucher;
+use App\Models\User;
 use App\Traits\Helper;
+use App\Jobs\Email;
 use DB;
 
 class OrderController extends Controller
@@ -222,6 +224,8 @@ class OrderController extends Controller
             $order->status = $request->status;
             $order->save();
 
+            $user = User::find($order->member_id);
+            Email::dispatch('ORDER',$user->email, $id)->onQueue('email');
             DB::commit();
             return response()->json([
                 "message" => "History berhasil disimpan"

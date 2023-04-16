@@ -4,16 +4,18 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use  App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Traits\Helper;
+use App\Models\User;
+use App\Jobs\Email;
 
 class AuthController extends Controller
 {
 
-
+    use Helper;
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'refresh', 'logout','loginMember','register']]);
+        $this->middleware('auth:api', ['except' => ['login', 'refresh', 'logout','loginMember','register','step1','activate']]);
     }
     /**
      * Get a JWT via given credentials.
@@ -28,13 +30,57 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $credentials = $request->only(['email', 'password']);
+        $user = User::where('email',$request->email)->first();
+        if(empty($user)){
+            return response()->json(['message' => 'user tidak ditemukan'],401);
+        }
+
+        if($user->email_verified_at == null){
+            return response()->json(['message' => 'Akun anda belum di aktivasi'],431);
+        }
+
+        if($user->is_login_otp == 1){
+            if($request->otp !== $user->otp || date("Y-m-d H:i:s") > $user->otp_valid_time){
+                return response()->json(['message' => 'otp tidak valid atau sudah kadaluarsa'],400);
+            }
+
+            $credentials = $request->only(['email', 'password', 'otp']);
+        }else{
+            $credentials = $request->only(['email', 'password', 'otp']);
+        }
 
         if (! $token = Auth::attempt($credentials)) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         return $this->respondWithToken($token);
+    }
+
+    public function step1(Request $request){
+        //echo 'xxx'; die;
+        //return $request->all();
+        $user = User::where('email','=',$request->data['email'])->first();
+        //return $user;
+        if(empty($user)){
+            return response()->json(['message' => 'user tidak ditemukan'],401);
+        }
+        
+        if($user->email_verified_at == null){
+            return response()->json(['message' => 'Akun anda belum di aktivasi'],431);
+        }
+
+        if($user->is_login_otp == 1){
+            $otp = rand(100000, 999999);
+            $time = date("Y-m-d H:i:s", strtotime('+2 hours'));
+            $model = User::find($user->id);
+            $model->otp = $otp;
+            $model->otp_valid_time = $time;
+            $model->save();
+            Email::dispatch('OTP',$request->data['email'])->onQueue('email');
+            return response()->json(['otp' => true]);
+        }
+        return response()->json(['otp' => false]);
+
     }
 
     public function profile()
@@ -46,6 +92,12 @@ class AuthController extends Controller
     {
         $user = User::find(auth()->user()->id);
         $user->name = $request->name;
+        if (preg_match('/^data:image\/(\w+);base64,/', $request->profile_pict)) {
+            $image = $this->storeImageLocal($request->profile_pict);
+            $user->profile_pict = $image;
+        }else{
+            $user->profile_pict = $request->profile_pict;
+        }
         $user->profesi = $request->profesi;
         $user->alamat = $request->alamat;
         $user->phone = $request->phone;
@@ -107,15 +159,31 @@ class AuthController extends Controller
             'password' => 'required|string|confirmed|min:6',
             'name'  => 'required|string',
         ]);
+        $bytes = random_bytes(20);
         User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
+            'email_verified_token' => bin2hex($bytes),
             'roles'  => 'member',
         ]);
-        
+        Email::dispatch('ACTIVATE',$request->email)->onQueue('email');
         return response()->json(['message' => 'success']);
+    }
+
+    public function activate(Request $request)
+    {
+        $user = User::where('email',$request->input('email'))->where('email_verified_token', $request->input('token'))->first();
+
+        if(empty($user)){
+            return view("notfound");
+        }
+
+        $model = User::find($user->id);
+        $model->email_verified_at = date('Y-m-d H:i:s');
+        $model->save();
+        return view("success");
     }
 
      /**
@@ -125,7 +193,7 @@ class AuthController extends Controller
      */
     public function me()
     {
-        return response()->json(['name' => auth()->user()->name, 'email' => auth()->user()->email,'profile' => auth()->user()->profile_pict, 'role' => auth()->user()->roles]);
+        return response()->json(['name' => auth()->user()->name, 'email' => auth()->user()->email,'profile' => auth()->user()->profile_pict, 'role' => auth()->user()->roles,'profesi' => auth()->user()->profesi]);
     }
 
 

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Rate;
 use Goutte\Client;
 use App\Models\Order;
+use App\Models\Template;
+use App\Jobs\Email;
 use DB;
 
 class RateController extends Controller
@@ -19,10 +21,7 @@ class RateController extends Controller
 
     public function getRate()
     {
-        $update = Order::where('status','=','waiting')->where(DB::Raw('DATE_ADD(created_at, INTERVAL 24 HOUR)'),"<",date('Y-m-d H:i:s'))->update([
-            "status" => "Canceled"
-        ]);
-        
+        Email::dispatchSync('AKTIVASI','x@x.x');
     }
 
     public function list(Request $request)
