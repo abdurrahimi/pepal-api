@@ -60,7 +60,7 @@ class Email implements ShouldQueue
 
         if($this->tipe == 'AKTIVASI'){
             $mail->Subject="Aktivasi Akun | Saldobit";
-            $actual_link = (empty($_SERVER['HTTPS']) ? 'http' : 'https') . "://$_SERVER[HTTP_HOST]";
+            $actual_link = 'http://165.22.255.134';
             $url = $actual_link.'/api/activate?email='.$user->email.'&token='.$user->email_verified_token;
             $mail->Body= str_replace('[kode-aktivasi]','<a href="'.$url.'">'.$url.'</a>', $template->body);
         }
