@@ -5,10 +5,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
+    use SoftDeletes;
     /**
      * The attributes that are mass assignable.
      *
@@ -18,9 +20,10 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
-        'role',
+        'roles',
         'phone',
-        'email_verified_token'
+        'email_verified_token',
+        'forgot_token'
     ];
     /**
      * The attributes that should be hidden for arrays.

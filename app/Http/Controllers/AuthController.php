@@ -15,7 +15,7 @@ class AuthController extends Controller
     use Helper;
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'refresh', 'logout','loginMember','register','step1','activate']]);
+        $this->middleware('auth:api', ['except' => ['login', 'refresh', 'logout','loginMember','register','step1','activate','forgot','forgot_password']]);
     }
     /**
      * Get a JWT via given credentials.
@@ -169,6 +169,28 @@ class AuthController extends Controller
             'roles'  => 'member',
         ]);
         Email::dispatch('AKTIVASI',$request->email)->onQueue('email');
+        return response()->json(['message' => 'success']);
+    }
+
+    public function forgot(Request $request)
+    {
+        //return $request->all();
+        $bytes = random_bytes(20);
+        User::where('email',$request->email)->update([
+            'forgot_token' => bin2hex($bytes),
+        ]);
+
+        Email::dispatch('FORGOT_PASSWORD',$request->email);
+
+        return response()->json(['message' => 'success']);
+    }
+
+    public function forgot_password(Request $request)
+    {
+        $update = User::where('email',$request->email)->where('forgot_token',$request->token)->update([
+            'password' => Hash::make($request->password)
+        ]);
+        
         return response()->json(['message' => 'success']);
     }
 

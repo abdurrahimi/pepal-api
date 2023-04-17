@@ -34,6 +34,8 @@ Route::group([
     Route::get('/activate', 'AuthController@activate');
     Route::post('login', 'AuthController@login')->name('login');
     Route::post('register', 'AuthController@register')->name('register');
+    Route::post('/forgot', 'AuthController@forgot');
+    Route::post('/forgot-password', 'AuthController@forgot_password');
     Route::post('refresh', 'AuthController@refresh');
     Route::get('/get-rate', 'RateController@index');
 
@@ -67,6 +69,7 @@ Route::group([
         Route::resource('voucher', 'VoucherController')->except(['create','edit']);
         Route::resource('email', 'EmailController')->except(['create','edit','delete','store']);
         Route::resource('template', 'TemplateController')->except(['create','edit','delete','store']);
+        Route::resource('users', 'UserController')->except(['create','edit']);
 
         Route::post('/voucher/apply', 'OrderController@applyVoucher');
 

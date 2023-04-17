@@ -69,6 +69,13 @@ class Email implements ShouldQueue
             $mail->Subject="Kode OTP | Saldobit";
             $mail->Body= str_replace('[kode-otp]',$user->otp, $template->body);
         }
+        
+        if($this->tipe == 'FORGOT_PASSWORD'){
+            $mail->Subject="Lupa Password Akun | Saldobit";
+            $actual_link = 'http://165.22.255.134';
+            $url = $actual_link.'/forgot-password?email='.$user->email.'&token='.$user->forgot_token;
+            $mail->Body= str_replace('[kode-aktivasi]','<a href="'.$url.'">'.$url.'</a>', $template->body);
+        }
 
         if($this->tipe == 'ORDER'){
             $mail->Subject="Informasi Order Anda | Saldobit";
@@ -87,18 +94,15 @@ class Email implements ShouldQueue
             $body = '<table
                         style="width:100%; border:1px solid black"
                     >
-                        <thead>
                             <tr>
-                                <th style="border:1px solid black">Order Id</th>
-                                <th style="border:1px solid black">Transaction</th>
-                                <th style="border:1px solid black">Nominal</th>
-                                <th style="border:1px solid black">Total Bayar</th>
-                                <th style="border:1px solid black">Tanggal</th>
-                                <th style="border:1px solid black">Pembayaran</th>
-                                <th style="border:1px solid black">Status</th>
+                                <td style="border:1px solid black">Order Id</td>
+                                <td style="border:1px solid black">Transaction</td>
+                                <td style="border:1px solid black">Nominal</td>
+                                <td style="border:1px solid black">Total Bayar</td>
+                                <td style="border:1px solid black">Tanggal</td>
+                                <td style="border:1px solid black">Pembayaran</td>
+                                <td style="border:1px solid black">Status</td>
                             </tr>
-                        </thead>
-                        <tbody>
                             <tr>
                                 <td style="border:1px solid black">'.$order->id.'</td>
                                 <td style="border:1px solid black">'.$order->tipe == "paypal"
@@ -111,8 +115,6 @@ class Email implements ShouldQueue
                                 <td style="border:1px solid black">'.$order->pembayaran.'</td>
                                 <td style="border:1px solid black">'.$order->status.'</td>
                             </tr>
-                        </tbody>
-                        
                     </table>';
             $mail->Body= str_replace('[order-detail]',$body, $template->body);
         }
